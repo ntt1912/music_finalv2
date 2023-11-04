@@ -1,0 +1,25 @@
+{% extends 'base.html' %}
+{% block title %}
+  Search
+{%endblock%}
+
+{% block content %}
+<form method="POST">
+    <input type="text" name="search_query" placeholder="Search for a song">
+    <button type="submit">Search</button>
+</form>
+<h1>Search Results</h1>
+<ul>
+    {% for song in search_results %}
+        <li>
+            {{ song.title }}
+            <a href="{{ url_for('play_song', song_id=song.id_track) }}">Play</a>
+            <a href="{{ url_for('add_to_playlist', song_id=song.id_track) }}">Add to Playlist</a>
+        </li>
+    {% endfor %}
+</ul>
+
+
+
+
+{% endblock %}
