@@ -1,4 +1,4 @@
-from flask import Flask,g, render_template, redirect, url_for, flash, request
+from flask import Flask, g, render_template, redirect, url_for, flash, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
@@ -18,6 +18,7 @@ from flask_mail import Message
 
 import random
 import sqlite3
+
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///music.db"
 app.config["SECRET_KEY"] = "3e7b5ec2a82b029ad8500095"
@@ -44,20 +45,21 @@ mail = Mail(app)
 
 
 def connect_db():
-    sql = sqlite3.connect('instance\music.db')
-    sql.row_factory = sqlite3.Row #tra ve dictionary thay vi tuple
-    return sql 
+    sql = sqlite3.connect("instance\music.db")
+    sql.row_factory = sqlite3.Row  # tra ve dictionary thay vi tuple
+    return sql
+
 
 def get_db():
-    if not hasattr(g,'sqlite3'):
+    if not hasattr(g, "sqlite3"):
         g.sqlite_db = connect_db()
     return g.sqlite_db
 
+
 @app.teardown_appcontext
 def close_db(error):
-    if hasattr(g,'sqlite_db'):
+    if hasattr(g, "sqlite_db"):
         g.sqlite_db.close()
-
 
 
 @login_manager.user_loader
@@ -373,12 +375,13 @@ def search_album():
 
     return render_template("search_album.html")
 
-@app.route("/showplaylist",methods = ['GET'])
+
+@app.route("/showplaylist", methods=["GET"])
 def show_playlist():
     user_id = current_user.get_id()
     dbm = get_db()
     cur = dbm.execute(
-        ''' 
+        """ 
             select tracks.id_track
             from user
             left outer join playlist
@@ -387,16 +390,18 @@ def show_playlist():
             on tracks.id_track = playlist.id_track 
             where user.id = ?
 
-        ''',[user_id]
-        )
+        """,
+        [user_id],
+    )
     songs_result = cur.fetchall()
-    return render_template('showplaylist.html',songs = songs_result)
+    return render_template("showplaylist.html", songs=songs_result)
 
-@app.route("/tophit",methods = ['GET'])
+
+@app.route("/tophit", methods=["GET"])
 def tophit():
     dbm = get_db()
     cur = dbm.execute(
-        ''' 
+        """ 
             select
             id_track, 
             count(*)
@@ -405,10 +410,10 @@ def tophit():
             order by count(*) desc
             limit(10)
 
-        '''
-        )
+        """
+    )
     songs_result = cur.fetchall()
-    return render_template('tophit.html',songs = songs_result)
+    return render_template("tophit.html", songs=songs_result)
 
 
 if __name__ == "__main__":
