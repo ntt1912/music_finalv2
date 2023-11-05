@@ -1,0 +1,19 @@
+{% extends 'base.html' %}
+{% block title %}
+  Home Page
+{%endblock%}
+
+{% block content %}
+ <h1>{{album_name.title}}</h1>
+  <div style="width: 75%;height: auto;">
+  
+    <form action="{{url_for('addtopl')}}" method="post">
+      <div class = 'form-group' >
+        {%for song in songs%}
+          <iframe style="border-radius:12px" src="https://open.spotify.com/embed/track/{{song.track_id}}?utm_source=generator" width="100%" height="152" frameBorder="0" allowfullscreen="" allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture" loading="lazy"></iframe>
+          <button type="submit" name="song_id" value="{{ song['track_id'] }}">Add</button>
+        {%endfor%}
+      </div>
+    </form>
+  </div>
+{%endblock%}

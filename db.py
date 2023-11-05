@@ -125,7 +125,12 @@ class Playlist(db.Model):
     )
     user = db.relationship("User", backref="tracks", lazy=True)
     tracks = db.relationship("Tracks", backref="user", lazy=True)
-
+class TBA(db.Model):
+    album_id = db.Column(db.Integer, db.ForeignKey("albums.id"), primary_key=True)
+    track_id = db.Column(db.Integer, db.ForeignKey("tracks.id_track"), primary_key=True)
+    position = db.Column(db.Integer)
+    album = db.relationship("Albums", backref="tracks", lazy=True)
+    track = db.relationship("Tracks", backref="album", lazy=True)
 
 admin = Admin(app, template_mode="bootstrap3")
 
@@ -144,21 +149,22 @@ class UserView(ModelView):
 
 
 class PlaylistView(Admin_Controll):
-    list_columns = [
+    column_list = [
         "user_id",
         "id_track",
     ]
 
 
 class TrackView(Admin_Controll):
-    list_columns = ["id_track", "title", "img"]
-
+    column_list = ["id_track", "title", "img"]
+class TBAView(Admin_Controll):
+    column_list = ["album_id", "track_id", "position"]
 
 admin.add_view(UserView(User, db.session))
 admin.add_view(TrackView(Tracks, db.session))
 admin.add_view(PlaylistView(Playlist, db.session))
 admin.add_view(ModelView(Albums, db.session))
-
+admin.add_view(TBAView(TBA, db.session))
 
 class RegisterForm(FlaskForm):
     def validate_username(self, username_to_check):
@@ -312,28 +318,27 @@ def reset_token(token):
     return render_template("changepass.html", form=form)
 
 
-@app.route("/changepassword", methods=["GET", "POST"])
-def changepass():
-    pass
-
-
 @app.route("/getsongs", methods=["GET"])
 @login_required
 def getsongs():
-    songs = random.sample(Tracks.query.all(), 5)
+    songs = random.sample(Tracks.query.all(), 200)
     return render_template("home.html", songs=songs)
 
 
 @app.route("/addtopl", methods=["GET", "POST"])
 def addtopl():
+    dbm = get_db()
     if request.method == "POST":
         song_id = request.form["song_id"]
         user_id = current_user.get_id()
-
-        usersong = Playlist(user_id=user_id, id_track=song_id)
-        db.session.add(usersong)
-        db.session.commit()
-        flash("Successfully", category="success")
+        existing_entry = Playlist.query.filter_by(user_id=user_id, id_track=song_id).first()
+        if existing_entry:
+            flash("Song is already in your playlist.", category="info")
+        else:
+            usersong = Playlist(user_id=user_id, id_track=song_id)
+            db.session.add(usersong)
+            db.session.commit()
+            flash("Added to playlist successfully", category="success")
     return render_template("home.html")
 
 
@@ -359,10 +364,14 @@ def play_song(song_id):
 @login_required
 def add_to_playlist(song_id):
     user_id = current_user.get_id()
-    usersong = Playlist(user_id=user_id, id_track=song_id)
-    db.session.add(usersong)
-    db.session.commit()
-    flash("Successfully", category="success")
+    existing_entry = Playlist.query.filter_by(user_id=user_id, id_track=song_id).first()
+    if existing_entry:
+        flash("Song is already in your playlist.", category="info")
+    else:
+        usersong = Playlist(user_id=user_id, id_track=song_id)
+        db.session.add(usersong)
+        db.session.commit()
+        flash("Added to playlist successfully", category="success")
     return redirect(url_for("search"))
 
 
@@ -415,6 +424,25 @@ def tophit():
     songs_result = cur.fetchall()
     return render_template("tophit.html", songs=songs_result)
 
+@app.route("/viewalbum/<string:album_id>",methods=['GET'])
+def viewalbum(album_id):
+    dbm = get_db()
+    cur = dbm.execute(
+        '''
+        select track_id
+        from tba
+        where album_id = ?
+         ''', [album_id])
+    result = cur.fetchall()
+    cur = dbm.execute(
+        '''
+        select title
+        from albums
+        where id = ?
+        ''', [album_id]
+    )
+    album_name = cur.fetchone()
+    return render_template("album.html",songs = result,album_name = album_name)
 
 if __name__ == "__main__":
     app.run(debug=True)
