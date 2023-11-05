@@ -12,12 +12,11 @@ from flask_admin.contrib.sqla import ModelView
 from flask_wtf import FlaskForm
 from wtforms import StringField, PasswordField, SubmitField
 from wtforms.validators import Length, EqualTo, Email, DataRequired, ValidationError
-
 from flask_login import login_user, logout_user, login_required
 from flask_mail import Message
-
 import random
 import sqlite3
+
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///music.db"
 app.config["SECRET_KEY"] = "3e7b5ec2a82b029ad8500095"
@@ -102,19 +101,22 @@ class User(db.Model, UserMixin):
         if bcrypt.check_password_hash(self.password_hash, attempted_password):
             return True
         return False
-
+    def __repr__(self) -> str:
+        return self.username
 
 class Tracks(db.Model):
     id_track = db.Column(db.String(length=50), primary_key=True)
     title = db.Column(db.String(length=50), nullable=True)
     img = db.Column(db.String(length=200))
-
+    def __repr__(self) -> str:
+        return self.id_track
 
 class Albums(db.Model):
     id = db.Column(db.String(length=50), primary_key=True)
     title = db.Column(db.String(length=50), nullable=True)
     image = db.Column(db.String(length=200))
-
+    def __repr__(self) -> str:
+        return self.id
 
 class Playlist(db.Model):
     user_id = db.Column(db.Integer(), db.ForeignKey("user.id"), primary_key=True)
@@ -151,7 +153,14 @@ class PlaylistView(Admin_Controll):
         "user_id",
         "id_track",
     ]
-
+    form_choices = {
+        'user': [
+            ('user_id', User.query.all())
+        ],
+        'tracks': [
+            ('id_track', Tracks.query.all())
+        ]
+    }
 
 class TrackView(Admin_Controll):
     column_list = ["id_track", "title", "img"]
@@ -228,6 +237,7 @@ def register_page():
         db.session.add(user_to_create)
         db.session.commit()
         flash("You just created successfully", category="success")
+        return redirect(url_for('login_page'))
     if form.errors != {}:
         for err_msg in form.errors.values():
             flash(
