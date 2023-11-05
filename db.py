@@ -1,4 +1,4 @@
-from flask import Flask, render_template, redirect, url_for, flash, request
+from flask import Flask,g, render_template, redirect, url_for, flash, request
 from flask_sqlalchemy import SQLAlchemy
 from flask_bcrypt import Bcrypt
 from flask_login import LoginManager
@@ -17,7 +17,7 @@ from flask_login import login_user, logout_user, login_required
 from flask_mail import Message
 
 import random
-
+import sqlite3
 app = Flask(__name__)
 app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///music.db"
 app.config["SECRET_KEY"] = "3e7b5ec2a82b029ad8500095"
@@ -41,6 +41,23 @@ app.config["MAIL_USE_SSL"] = False
 
 
 mail = Mail(app)
+
+
+def connect_db():
+    sql = sqlite3.connect('instance\music.db')
+    sql.row_factory = sqlite3.Row #tra ve dictionary thay vi tuple
+    return sql 
+
+def get_db():
+    if not hasattr(g,'sqlite3'):
+        g.sqlite_db = connect_db()
+    return g.sqlite_db
+
+@app.teardown_appcontext
+def close_db(error):
+    if hasattr(g,'sqlite_db'):
+        g.sqlite_db.close()
+
 
 
 @login_manager.user_loader
@@ -314,10 +331,85 @@ def addtopl():
         usersong = Playlist(user_id=user_id, id_track=song_id)
         db.session.add(usersong)
         db.session.commit()
-        flash('Successfully',category='success')
-    return render_template('home.html')
+        flash("Successfully", category="success")
+    return render_template("home.html")
 
 
+@app.route("/search", methods=["GET", "POST"])
+def search():
+    if request.method == "POST":
+        search_query = request.form["search_query"]
+        # Thực hiện tìm kiếm trong cơ sở dữ liệu theo query
+        search_results = Tracks.query.filter(
+            Tracks.title.like(f"%{search_query}%")
+        ).all()
+        return render_template("search.html", search_results=search_results)
+    return render_template("search.html")
 
-if __name__ == '__main__':
+
+@app.route("/play_song/<song_id>")
+def play_song(song_id):
+    song = Tracks.query.filter_by(id_track=song_id).first()
+    return render_template("play_song.html", song=song)
+
+
+@app.route("/add_to_playlist/<song_id>")
+@login_required
+def add_to_playlist(song_id):
+    user_id = current_user.get_id()
+    usersong = Playlist(user_id=user_id, id_track=song_id)
+    db.session.add(usersong)
+    db.session.commit()
+    flash("Successfully", category="success")
+    return redirect(url_for("search"))
+
+
+@app.route("/search_album", methods=["GET", "POST"])
+def search_album():
+    if request.method == "POST":
+        search_query = request.form["search_query"]
+        albums = Albums.query.filter(Albums.title.like(f"%{search_query}%")).all()
+        return render_template("search_album.html", albums=albums)
+
+    return render_template("search_album.html")
+
+@app.route("/showplaylist",methods = ['GET'])
+def show_playlist():
+    user_id = current_user.get_id()
+    dbm = get_db()
+    cur = dbm.execute(
+        ''' 
+            select tracks.id_track
+            from user
+            left outer join playlist
+            on playlist.user_id = user.id
+            left outer join tracks
+            on tracks.id_track = playlist.id_track 
+            where user.id = ?
+
+        ''',[user_id]
+        )
+    songs_result = cur.fetchall()
+    return render_template('showplaylist.html',songs = songs_result)
+
+@app.route("/tophit",methods = ['GET'])
+def tophit():
+    dbm = get_db()
+    cur = dbm.execute(
+        ''' 
+            select
+            id_track, 
+            count(*)
+            from playlist
+            group by id_track
+            order by count(*) desc
+            limit(10)
+
+        '''
+        )
+    songs_result = cur.fetchall()
+    return render_template('tophit.html',songs = songs_result)
+
+
+if __name__ == "__main__":
     app.run(debug=True)
