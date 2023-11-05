@@ -1,7 +1,7 @@
 {% extends 'base.html' %}
 
 {% block title %}
-  Search
+  Search album
 {%endblock%}
 
 {% block content %}
@@ -17,7 +17,21 @@
     <h2>Search Results</h2>
     <ul>
         {% for album in albums %}
-        <li><a href="{{ url_for('viewalbum', album_id= album.id ) }}">{{ album.title }}</a></li>
+        <li>
+        <img src="{{ album.image }}" alt="{{ album.title }}" width="50" height="50">
+        <a href="{{ url_for('viewalbum', album_id= album.id ) }}">{{ album.title }}</a>
         {% endfor %}
+        </li>
     </ul>
+    <style>
+        .album-info {
+            display: flex;
+            align-items: center;
+        }
+    
+        .album-actions {
+            margin-left: 10px;
+        }
+    </style>
+    
 {% endblock %}
