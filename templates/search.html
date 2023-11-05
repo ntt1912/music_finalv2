@@ -12,6 +12,7 @@
 <ul>
     {% for song in search_results %}
         <li>
+            <img src="{{ song.img }}" alt="{{ song.title }}" width="50" height="50">
             {{ song.title }}
             <a href="{{ url_for('play_song', song_id=song.id_track) }}">Play</a>
             <a href="{{ url_for('add_to_playlist', song_id=song.id_track) }}">Add to Playlist</a>
@@ -19,7 +20,16 @@
     {% endfor %}
 </ul>
 
+<style>
+    .song-info {
+        display: flex;
+        align-items: center;
+    }
 
+    .song-actions {
+        margin-left: 10px;
+    }
+</style>
 
 
 {% endblock %}
