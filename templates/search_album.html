@@ -17,7 +17,7 @@
     <h2>Search Results</h2>
     <ul>
         {% for album in albums %}
-        <li><a href="{{ url_for('search_album', album_id=album.id) }}">{{ album.title }}</a></li>
+        <li><a href="{{ url_for('viewalbum', album_id= album.id ) }}">{{ album.title }}</a></li>
         {% endfor %}
     </ul>
 {% endblock %}
