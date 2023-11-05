@@ -407,6 +407,7 @@ def search_album():
 
 
 @app.route("/showplaylist", methods=["GET"])
+@login_required
 def show_playlist():
     user_id = current_user.get_id()
     dbm = get_db()
