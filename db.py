@@ -269,7 +269,7 @@ def addtopl():
         db.session.add(usersong)
         db.session.commit()
         flash('Successfully',category='success')
-    return render_template('home.html')
+    return redirect(url_for('getsongs'))
 
 
 
