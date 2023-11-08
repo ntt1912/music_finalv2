@@ -4,7 +4,7 @@ Sign up
 {%endblock%}
 
 {% block content%}
-<div class = "container">
+<div>
     <form method="POST" class = "form-register" style = "color: white;" action="">
         {{ form.hidden_tag() }}
         <h1 class="h3 mb-3 font-weight-normal">PLEASE CREATE YOUR ACCOUNT </h1>
@@ -21,7 +21,7 @@ Sign up
         {{form.password2.label()}}
         {{form.password2(class="form-control",placeholder = "Verify your password")}}
         <br>
-        <div class = "custom-checkbox mb-3 ">
+        <div>
             <h6> Already have an account </h6>
             <a class="btn btn-sm btn-secondary" href="{{url_for('login_page')}}">Log in </a>
         </div>
