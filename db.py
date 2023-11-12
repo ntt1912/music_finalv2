@@ -43,7 +43,7 @@ mail = Mail(app)
 
 
 def connect_db():
-    sql = sqlite3.connect("instance\music.db")
+    sql = sqlite3.connect("instance\\music.db")
     sql.row_factory = sqlite3.Row  # tra ve dictionary thay vi tuple
     return sql
 
