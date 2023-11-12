@@ -367,7 +367,6 @@ def addtopl():
 def search():
     if request.method == "POST":
         search_query = request.form["search_query"]
-        # Thực hiện tìm kiếm trong cơ sở dữ liệu theo query
         search_results = Tracks.query.filter(
             Tracks.title.like(f"%{search_query}%")
         ).all()
